@@ -1576,6 +1576,8 @@ function boot() {
   if (tipo === 'visita') checkRetorno();
   rememberTotals();
   window.addEventListener('scroll', onScroll, { passive: true });
+  /* enlaces directos a una sección (#sec-pelicula, #obras): el contenido se arma con JS, así que se baja después */
+  if (location.hash.length > 1) { const dest = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (dest) setTimeout(() => dest.scrollIntoView({ block: 'start' }), 60); }
   if (PARAMS.get('panel') === '1') openPanel();
   if (tipo === 'nueva' && !S.visto_proto) {
     S.visto_proto = 1; save();
