@@ -587,6 +587,17 @@ body:has(dialog[open]){ overflow:hidden; }
 .hdr-title{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 @media (max-width:420px){ .back span{ display:none; } .back{ min-width:44px; justify-content:center; } .hdr .wrap{ gap:8px; } }
 
+/* tarjeta de preguntas con pasos y opciones tipo tarjeta */
+.react-top{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+.react-top .eyebrow{ margin-bottom:6px; }
+.paso{ font-size:.74rem; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.opts.cards{ display:grid; grid-template-columns:1fr; gap:10px; }
+@media (min-width:560px){ .opts.cards{ grid-template-columns:1fr 1fr; } }
+.opt.card{ min-height:auto; padding:14px 16px; border-radius:var(--r); text-align:left; display:flex; flex-direction:column; gap:4px; }
+.opt.card b{ font-size:1.02rem; font-weight:650; }
+.opt.card span{ font-weight:400; color:var(--muted); font-size:.88rem; line-height:1.4; }
+.react .foot-row .btn{ margin-left:auto; }
+
 /* ---------- aparición al hacer scroll ---------- */
 .rv{ opacity:0; transform:translateY(22px); transition:opacity .7s var(--ease), transform .7s var(--ease); }
 .rv.in{ opacity:1; transform:none; }

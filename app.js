@@ -365,37 +365,66 @@ function railHTML(o) {
 function sec(o, id, nav, inner, cls) {
   return `<section class="o-sec ${cls || ''}" id="sec-${id}" data-section="${id}" data-nav="${nav}">${inner}</section>`;
 }
-function reactHTML(o, q, secId) {
-  const r = myReaction(o, q);
+/* preguntas: las de un mismo capítulo se muestran en una tarjeta que avanza de a una */
+function sectionQs(o, sec) {
+  if (sec === 'experiencia') return o.experiencia ? [o.experiencia.pregunta] : [];
+  if (sec === 'historia') return o.preguntas || (o.pregunta ? [o.pregunta] : []);
+  const c = (o.capitulos || []).find(x => x.id === sec);
+  return c ? (c.preguntas || (c.pregunta ? [c.pregunta] : [])) : [];
+}
+function allQs(o) {
+  const all = [];
+  (o.capitulos || []).forEach(c => sectionQs(o, c.id).forEach(q => all.push(q)));
+  if (o.experiencia && o.experiencia.pregunta) all.push(o.experiencia.pregunta);
+  sectionQs(o, 'historia').forEach(q => all.push(q));
+  return all;
+}
+function findQ(o, qid) { return allQs(o).find(q => q.id === qid); }
+function stackIdx(o, qs, sec) {
+  const st = S.sesion.stack || (S.sesion.stack = {}), key = o.id + ':' + sec;
+  if (st[key] == null) { const i = qs.findIndex(q => !myReaction(o, q)); st[key] = i < 0 ? qs.length - 1 : i; }
+  return clamp(st[key], 0, qs.length - 1);
+}
+function ordenOpciones(q) {
   const k = qkey(q);
-  const head = `<p class="eyebrow work">${esc(t(q.eyebrow))}</p><h3>${esc(t(q.title))}</h3>${q.sub ? `<p class="sub">${esc(t(q.sub))}</p>` : ''}`;
+  if (S.sesion.orden[k]) return S.sesion.orden[k];
+  const libres = q.opciones.filter(x => !x.fija).map(x => x.v), fijas = q.opciones.filter(x => x.fija).map(x => x.v);
+  S.sesion.orden[k] = (q.barajar === false ? libres : shuffle(libres)).concat(fijas);
+  return S.sesion.orden[k];
+}
+function reactHTML(o, qs, secId) {
+  if (!Array.isArray(qs)) qs = [qs];
+  const n = qs.length, i = stackIdx(o, qs, secId), q = qs[i];
+  const r = myReaction(o, q), k = qkey(q);
+  const hechas = qs.filter(x => { const y = myReaction(o, x); return y && y.opcion; }).length;
+  const paso = n > 1 ? `<span class="paso">${LANG === 'es' ? 'Pregunta' : 'Question'} ${i + 1} ${LANG === 'es' ? 'de' : 'of'} ${n}</span>` : '';
+  const head = `<div class="react-top"><p class="eyebrow work">${esc(t(q.eyebrow))}</p>${paso}</div><h3>${esc(t(q.title))}</h3>${q.sub ? `<p class="sub">${esc(t(q.sub))}</p>` : ''}`;
+  const sig = i < n - 1
+    ? `<button type="button" class="btn sm" data-act="stack-next" data-sec="${secId}" data-cta="siguiente_pregunta">${LANG === 'es' ? 'Siguiente pregunta' : 'Next question'} ${I.right}</button>`
+    : (n > 1 ? `<span class="small muted">${LANG === 'es' ? 'Respondiste' : 'You answered'} ${hechas} ${LANG === 'es' ? 'de' : 'of'} ${n}</span>` : '');
+  const attrs = `id="rx-${o.id}-${secId}" data-react="${o.id}|${k}" data-seccion="${secId}"`;
   if (r && r.opcion) {
     const tot = reactionTotals(o, q);
     const sum = Object.values(tot).reduce((a, b) => a + b, 0) || 1;
-    return `<div class="react" id="rx-${o.id}-${q.id}" data-react="${o.id}|${k}" data-seccion="${secId}">${head}
+    return `<div class="react" ${attrs}>${head}
       <p class="saved">${I.check} ${esc(t(SITE.obra.guardado))}</p>
       <div class="results" aria-label="${esc(t(SITE.obra.resultados))}"><p class="small muted">${esc(t(SITE.obra.resultados))} · <span class="sample">${esc(t(SITE.ficha.ejemplo))}</span></p>
-        ${q.opciones.map(op => { const n = tot[op.v] || 0; const mine = r.opcion === op.v;
-          return `<div class="res ${mine ? 'mine' : ''}"><span class="rl">${esc(t(op))}${mine ? `<span class="yo">${esc(t(SITE.obra.tu_respuesta))}</span>` : ''}</span><span class="rp">${pct(n, sum)}</span><span class="bar"><i data-w="${(n * 100 / sum).toFixed(1)}"></i></span></div>`; }).join('')}
-        <p class="small muted">${esc(t(SITE.obra.respuestas, { n: fmt(sum) }))}</p></div></div>`;
+        ${q.opciones.map(op => { const c = tot[op.v] || 0; const mine = r.opcion === op.v;
+          return `<div class="res ${mine ? 'mine' : ''}"><span class="rl">${esc(t(op))}${mine ? `<span class="yo">${esc(t(SITE.obra.tu_respuesta))}</span>` : ''}</span><span class="rp">${pct(c, sum)}</span><span class="bar"><i data-w="${(c * 100 / sum).toFixed(1)}"></i></span></div>`; }).join('')}
+        <p class="small muted">${esc(t(SITE.obra.respuestas, { n: fmt(sum) }))}</p></div>
+      ${sig ? `<div class="foot-row">${sig}</div>` : ''}</div>`;
   }
   if (r && r.saltada) {
-    return `<div class="react" id="rx-${o.id}-${q.id}" data-react="${o.id}|${k}" data-seccion="${secId}">${head}
+    return `<div class="react" ${attrs}>${head}
       <div class="foot-row"><span class="small muted">${LANG === 'es' ? 'La saltaste.' : 'You skipped it.'}</span>
-      <button type="button" class="textbtn" data-act="unskip" data-q="${q.id}">${LANG === 'es' ? 'Responder ahora' : 'Answer now'}</button></div></div>`;
+      <button type="button" class="textbtn" data-act="unskip" data-q="${q.id}" data-sec="${secId}">${LANG === 'es' ? 'Responder ahora' : 'Answer now'}</button>${sig}</div></div>`;
   }
-  const orden = (S.sesion.orden[k] || (S.sesion.orden[k] = shuffle(q.opciones.map(x => x.v))));
-  return `<div class="react" id="rx-${o.id}-${q.id}" data-react="${o.id}|${k}" data-seccion="${secId}">${head}
-    <div class="opts" role="group" aria-label="${esc(t(q.title))}">${orden.map((v, pos) => { const op = q.opciones.find(x => x.v === v);
-      return `<button type="button" class="opt" data-act="react" data-q="${q.id}" data-opt="${v}" data-pos="${pos}" aria-pressed="false">${esc(t(op))}</button>`; }).join('')}</div>
-    <div class="foot-row"><button type="button" class="textbtn" data-act="skip" data-q="${q.id}">${esc(t(SITE.obra.saltar))}</button></div></div>`;
-}
-function findQ(o, qid) {
-  const all = [];
-  (o.capitulos || []).forEach(c => c.pregunta && all.push(c.pregunta));
-  if (o.experiencia && o.experiencia.pregunta) all.push(o.experiencia.pregunta);
-  if (o.pregunta) all.push(o.pregunta);
-  return all.find(q => q.id === qid);
+  const orden = ordenOpciones(q);
+  const tarjetas = q.estilo === 'tarjetas';
+  return `<div class="react" ${attrs}>${head}
+    <div class="opts ${tarjetas ? 'cards' : ''}" role="group" aria-label="${esc(t(q.title))}">${orden.map((v, pos) => { const op = q.opciones.find(x => x.v === v);
+      return `<button type="button" class="opt ${tarjetas ? 'card' : ''}" data-act="react" data-q="${q.id}" data-sec="${secId}" data-opt="${v}" data-pos="${pos}" aria-pressed="false">${tarjetas ? `<b>${esc(t(op))}</b><span>${esc(t(op.d))}</span>` : esc(t(op))}</button>`; }).join('')}</div>
+    <div class="foot-row"><button type="button" class="textbtn" data-act="skip" data-q="${q.id}" data-sec="${secId}">${esc(t(SITE.obra.saltar))}</button></div></div>`;
 }
 
 const SECTIONS = {
@@ -463,7 +492,7 @@ const SECTIONS = {
     return sec(o, 'historia', 'obra', `<div class="wrap"><div class="cap-body" style="margin-top:0">
       <div class="rv"><p class="eyebrow work">${esc(t(SITE.obra.historia))}</p><p class="lead" style="color:var(--fg)">${esc(t(o.story))}</p>
         <p class="incompleta">${esc(t(SITE.obra.incompleta))}</p></div>
-      <div class="rv">${reactHTML(o, o.pregunta, 'historia')}</div>
+      <div class="rv">${reactHTML(o, sectionQs(o, 'historia'), 'historia')}</div>
     </div></div>`);
   },
   voto(o) { return sec(o, 'voto', 'votar', `<div class="wrap rv" id="vote-box">${voteInner(o)}</div>`); },
@@ -509,8 +538,8 @@ function capHTML(o, c, id) {
       <p class="cap-text">${esc(t(c.text))}</p>
       <div class="tags">${c.chips.map(x => `<span class="tag">${esc(t(x))}</span>`).join('')}</div>${sp}</div>`;
   const body = id === 'musica'
-    ? `<div class="wrap split rev"><div>${media}</div><div>${text}${reactHTML(o, c.pregunta, id)}</div></div>`
-    : `<div class="wrap">${media}<div class="cap-body">${text}<div class="rv">${reactHTML(o, c.pregunta, id)}</div></div></div>`;
+    ? `<div class="wrap split rev"><div>${media}</div><div>${text}${reactHTML(o, sectionQs(o, id), id)}</div></div>`
+    : `<div class="wrap">${media}<div class="cap-body">${text}<div class="rv">${reactHTML(o, sectionQs(o, id), id)}</div></div></div>`;
   return sec(o, id, id, body, 'cap');
 }
 function voteInner(o) {
@@ -631,29 +660,36 @@ function flash(el) { if (!el) return; el.classList.remove('flash'); void el.offs
 function scrollToEl(el, block) { if (el) el.scrollIntoView({ behavior: SMOOTH, block: block || 'start' }); }
 
 /* ================= reacciones ================= */
-function answer(qid, opt, pos) {
+function answer(qid, opt, pos, sec) {
   const o = OBRA, q = findQ(o, qid); if (!q) return;
   const k = qkey(q);
-  const seccion = ($('#rx-' + o.id + '-' + q.id) || {}).dataset ? $('#rx-' + o.id + '-' + q.id).dataset.seccion : null;
-  markViewed('pregunta', o.id + '|' + k, () => track('pregunta_vista', { pregunta: k, seccion, forzada: true }));
+  markViewed('pregunta', o.id + '|' + k, () => track('pregunta_vista', { pregunta: k, seccion: sec, forzada: true }));
   const t0 = S.sesion.visto_ts[o.id + '|' + k];
   myRx(o.id)[k] = { opcion: opt, posicion: +pos, ts: now() };
-  track('reaccion', { pregunta: k, seccion, opcion: opt, posicion: +pos, mostradas: S.sesion.orden[k] || null, t_resp_ms: t0 ? now() - t0 : null });
-  save();
-  rerender(seccion === 'experiencia' ? 'experiencia' : seccion);
-  const box = $('#rx-' + o.id + '-' + q.id); if (box) flash(box);
+  track('reaccion', { pregunta: k, seccion: sec, opcion: opt, posicion: +pos, mostradas: S.sesion.orden[k] || null, t_resp_ms: t0 ? now() - t0 : null });
+  save(); rerender(sec);
+  const box = $('#rx-' + o.id + '-' + sec); if (box) flash(box);
 }
-function skip(qid) {
+function setStack(sec, i) { const st = S.sesion.stack || (S.sesion.stack = {}); st[OBRA.id + ':' + sec] = i; }
+function skip(qid, sec) {
   const o = OBRA, q = findQ(o, qid); if (!q) return;
-  const k = qkey(q); const box = $('#rx-' + o.id + '-' + q.id); const seccion = box ? box.dataset.seccion : null;
-  myRx(o.id)[k] = { saltada: true, ts: now() };
-  track('reaccion_saltada', { pregunta: k, seccion });
-  save(); rerender(seccion);
+  myRx(o.id)[qkey(q)] = { saltada: true, ts: now() };
+  track('reaccion_saltada', { pregunta: qkey(q), seccion: sec });
+  const qs = sectionQs(o, sec), i = qs.findIndex(x => x.id === qid);
+  if (i >= 0 && i < qs.length - 1) setStack(sec, i + 1);
+  save(); rerender(sec);
 }
-function unskip(qid) {
+function unskip(qid, sec) {
   const o = OBRA, q = findQ(o, qid); if (!q) return;
-  const k = qkey(q); const box = $('#rx-' + o.id + '-' + q.id); const seccion = box ? box.dataset.seccion : null;
-  delete myRx(o.id)[k]; save(); rerender(seccion);
+  delete myRx(o.id)[qkey(q)];
+  const i = sectionQs(o, sec).findIndex(x => x.id === qid); if (i >= 0) setStack(sec, i);
+  save(); rerender(sec);
+}
+function stackNext(sec) {
+  const qs = sectionQs(OBRA, sec), st = S.sesion.stack || (S.sesion.stack = {}), key = OBRA.id + ':' + sec;
+  st[key] = Math.min((st[key] || 0) + 1, qs.length - 1);
+  save(); rerender(sec);
+  const box = $('#rx-' + OBRA.id + '-' + sec); if (box) { box.scrollIntoView({ block: 'nearest', behavior: SMOOTH }); flash(box); }
 }
 
 /* ================= voto ================= */
@@ -1442,9 +1478,10 @@ document.addEventListener('click', e => {
     case 'sheet': e.preventDefault(); if (a.dataset.sheet === 'code' && !S.pendiente) break; openSheet(a.dataset.sheet, { proposito: a.dataset.proposito }); break;
     case 'sheet-close': closeSheet(); break;
     case 'privacy-inline': { e.preventDefault(); const p = a.closest('form') && a.closest('form').querySelector('.privacy-inline'); if (p) p.hidden = !p.hidden; break; }
-    case 'react': answer(a.dataset.q, a.dataset.opt, a.dataset.pos); break;
-    case 'skip': skip(a.dataset.q); break;
-    case 'unskip': unskip(a.dataset.q); break;
+    case 'react': answer(a.dataset.q, a.dataset.opt, a.dataset.pos, a.dataset.sec); break;
+    case 'skip': skip(a.dataset.q, a.dataset.sec); break;
+    case 'unskip': unskip(a.dataset.q, a.dataset.sec); break;
+    case 'stack-next': stackNext(a.dataset.sec); break;
     case 'vote': openVote(a.dataset.via); break;
     case 'withdraw': withdrawVote(); break;
     case 'follow': {

@@ -1,8 +1,8 @@
 {
- "build": "20260924-96f38d11",
+ "build": "20260924-f86d9eec",
  "archivos": {
   ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "app.js": "59b2c89a79101bc38b5684d9bb1e66ee31523a7b6d4bf73c1ed544bb01abec39",
+  "app.js": "166f8092d8ab21f4940d7b28a663f514cbc7c12ef2149a84570e557be6db93eb",
   "assets/favicon.svg": "d35b46a52c7ccc0dc6f2cde3275d32fa1beea455ad0603bcb8eca84e58469e29",
   "assets/logo-mantis.webp": "3670615511f0961a1e8f181fe8864cabd7dcec13c4ba804216011c733680322c",
   "assets/logo-qantica.webp": "27b998a7b93d6807ed96f8459d05f9b266b6ee531a1fbcb208209771f3c2ea8f",
@@ -18,13 +18,13 @@
   "assets/poster-mantis.webp": "e35ebc64cfb58f7d6a149273798f688d0ff75abf6c8188f134954bc91d304e71",
   "assets/pulse-fiesta.webp": "cdb6700a81d61937bd3c334b9c718c952c32d2715f6cb8d53e0a7778d9580645",
   "assets/pulse-portada.webp": "4458965846bec66c900f1cd0926cfb92c9dff330cb5b92f14c55b278b2574fe1",
-  "index.html": "9ddd543b9f9bcf1b55126b0dd0e9ae0e6dcc5fa2b3f41f28fa3cca093db54960",
-  "obra/antes/index.html": "1b17a2615281ef6d9dad1992e55bf77de293da8b36e9a9bc8174ebe0d95152ee",
-  "obra/badnight/index.html": "2208d69d746240780ffa4cb97785be34269b554f529896ee0bcc8033ee1479a1",
-  "obra/fumigarios/index.html": "057d08e44f666cddd3a6a38d7885219029cc00b370ec2d7604e1008c5ef2ba22",
-  "obra/malambo/index.html": "b15b7bf79e0aeb03241fa4de2aa3a8abcd339fbd0eb440a4a41502d54c763640",
-  "obra/mantis/index.html": "987f73bf80f9b259ce4a2f629a2a55cf7928e9f4a0bda36dd597c9fae69bc062",
+  "index.html": "5c4ad250c7a6cbf09d2c624cb0bcac9b6565b3ab664a6f5c9ef9d757f087d0e1",
+  "obra/antes/index.html": "6d6590074820d810c98197dbae3296654115c56bdf4b4f7fa793375bda0d4baf",
+  "obra/badnight/index.html": "4acb8f2cfb38b4f7a16564c3530fc4034420eccd40d308527e1da434fe2d5b17",
+  "obra/fumigarios/index.html": "afcb77e27184fa7bcb19e3af3d82a33b02594c262f9168c74eb21d57a5736622",
+  "obra/malambo/index.html": "d516de2912dcae2a7b0378d660272d2d320d953a184e768bbf88ff8187b25ee8",
+  "obra/mantis/index.html": "648a48c1f34ea6fa7aeba26742aee1361f59319ead4aa4b49cc1cd77d74ac4ca",
   "robots.txt": "331ea9090db0c9f6f597bd9840fd5b171830f6e0b3ba1cb24dfa91f0c95aedc1",
-  "styles.css": "d9c9f11e8809a23ff8b8008af6f4f5ba4dec2245a2135119092cc0b2f8a1465b"
+  "styles.css": "4973022eea69b15b6ec22c3cbf266e4d3cda85e167ad091d55726d8331cc626e"
  }
 }
